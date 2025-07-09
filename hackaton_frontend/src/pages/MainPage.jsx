@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // ✅ импорт для редиректа
+import { useNavigate } from 'react-router-dom';
 import './MainPage.css';
 
 const COLORS = [
@@ -12,34 +12,15 @@ function getShuffledColors(count) {
   return shuffled.slice(0, count);
 }
 
-
 const MainPage = () => {
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [colors, setColors] = useState([]);
-
-  const navigate = useNavigate(); // ✅ хук для навигации
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-  
-    fetch('http://localhost:5246/Module/get-all', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
+    fetch('http://localhost:5246/Module/get-all')
       .then((response) => {
-        if (response.status === 401) {
-          // если токен невалидный
-          localStorage.removeItem("token");
-          navigate("/login");
-          throw new Error("Неавторизован");
-        }
         if (!response.ok) throw new Error('Ошибка при получении данных');
         return response.json();
       })
@@ -52,9 +33,22 @@ const MainPage = () => {
         console.error('Ошибка:', error);
         setLoading(false);
       });
-  }, [navigate]);
+  }, []);
 
-  
+  const handleOpenClick = (moduleId) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    // ✅ Здесь можешь сделать переход на страницу модуля
+    // Например:
+    navigate(`/module/${moduleId}`);
+    
+    // Или если пока нет маршрута:
+    // alert(`Открываем модуль с id: ${moduleId}`);
+  };
 
   if (loading) {
     return <div className="loading">Загрузка...</div>;
@@ -74,7 +68,12 @@ const MainPage = () => {
           >
             <div className="module-title">{module.title}</div>
             <div className="module-levels">Уровней: {module.levels.length}</div>
-            <button className="module-button">Открыть</button>
+            <button
+              className="module-button"
+              onClick={() => handleOpenClick(module.id)}
+            >
+              Открыть
+            </button>
           </div>
         ))}
       </div>
