@@ -1,11 +1,11 @@
 import { useState } from "react";
 import "./AuthPages.css";
-import { BrowserRouter as Router, Routes, Route, NavLink } from "react-router-dom";
-import RegisterPage from "./RegisterPage";
+import { useNavigate } from 'react-router-dom';
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,7 +19,7 @@ export default function LoginPage() {
     if (response.ok) {
       const data = await response.json();
       localStorage.setItem("token", data.token);
-      alert("Успешный вход!");
+      navigate("/");
     } else {
       alert("Ошибка входа");
     }

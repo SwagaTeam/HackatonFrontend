@@ -1,0 +1,41 @@
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: white; /* бордовый */
+  padding: 10px 20px;
+  color: #ca133e;
+}
+
+.left-section {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  height: 80px;
+}
+
+.divider {
+  width: 1px;
+  height: 30px;
+  background-color: black;
+  margin: 0 12px;
+}
+
+.course-title {
+  padding-left: 25px;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.right-section .profile-icon {
+  height: 40px;
+  cursor: pointer;
+  border-radius: 30%;
+  transition: transform 0.2s;
+}
+
+.right-section .profile-icon:hover {
+  transform: scale(1.1);
+}
