@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // ✅ импорт для редиректа
 import './MainPage.css';
 
 const COLORS = [
@@ -15,16 +16,35 @@ function getSequentialColors(count) {
   return result;
 }
 
+
 const MainPage = () => {
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [colors, setColors] = useState([]);
-  const [columns, setColumns] = useState(3); // по умолчанию 3 колонки
+
+  const navigate = useNavigate(); // ✅ хук для навигации
 
   // Получаем модули с сервера
   useEffect(() => {
-    fetch('http://localhost:5246/Module/get-all')
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+  
+    fetch('http://localhost:5246/Module/get-all', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
       .then((response) => {
+        if (response.status === 401) {
+          // если токен невалидный
+          localStorage.removeItem("token");
+          navigate("/login");
+          throw new Error("Неавторизован");
+        }
         if (!response.ok) throw new Error('Ошибка при получении данных');
         return response.json();
       })
@@ -37,7 +57,7 @@ const MainPage = () => {
         console.error('Ошибка:', error);
         setLoading(false);
       });
-  }, []);
+  }, [navigate]);
 
   // Обработчик изменения размера окна, устанавливаем количество колонок
   useEffect(() => {
@@ -60,6 +80,8 @@ const MainPage = () => {
 
     return () => window.removeEventListener('resize', updateColumns);
   }, []);
+
+  
 
   if (loading) {
     return <div className="loading">Загрузка...</div>;
