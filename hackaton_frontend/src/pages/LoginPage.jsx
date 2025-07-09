@@ -8,22 +8,28 @@ export default function LoginPage() {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const response = await fetch("http://localhost:5246/User/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ login: email, password }),
-    });
+  const response = await fetch("http://localhost:5246/User/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ login: email, password }),
+  });
 
-    if (response.ok) {
-      const data = await response.json();
-      localStorage.setItem("token", data.token);
-      navigate("/");
-    } else {
-      alert("Ошибка входа");
-    }
-  };
+  if (response.ok) {
+    const data = await response.json();
+    localStorage.setItem("token", data.token);
+    navigate("/");
+
+    // Перезагрузить страницу после перехода
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
+  } else {
+    alert("Ошибка входа");
+  }
+};
+
 
   return (
     <div className="auth-container">
