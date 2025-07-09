@@ -158,12 +158,13 @@
 
 .level-connector {
   position: absolute;
-  border-top: 2px dashed #3a3a3a;
+  border-top: 4px dashed #3a3a3a; /* стало жирнее */
   pointer-events: none;
   background: none;
   height: 0;
   z-index: 0;
 }
+
 
 @media (max-width: 768px) {
   .module-page {
