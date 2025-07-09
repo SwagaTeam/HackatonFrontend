@@ -20,11 +20,10 @@ const MainPage = () => {
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [colors, setColors] = useState([]);
+  const [columns, setColumns] = useState(3);
   const navigate = useNavigate();
 
-  const navigate = useNavigate(); // ✅ хук для навигации
-
-  // Получаем модули с сервера
+  // ✅ Получаем модули с сервера
   useEffect(() => {
     fetch('http://localhost:5246/Module/get-all')
       .then((response) => {
@@ -42,27 +41,16 @@ const MainPage = () => {
       });
   }, []);
 
-  const handleOpenClick = (moduleId) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    // ✅ Здесь можешь сделать переход на страницу модуля
-    // Например:
-    navigate(`/module/${moduleId}`);
-
-  // Обработчик изменения размера окна, устанавливаем количество колонок
+  // ✅ Обработчик изменения размера окна
   useEffect(() => {
     function updateColumns() {
       const width = window.innerWidth;
 
-      if (width >= 2560) {         // 2K и выше (примерно 2560px)
+      if (width >= 2560) {
         setColumns(5);
-      } else if (width >= 1920) {  // FullHD (1920px)
+      } else if (width >= 1920) {
         setColumns(3);
-      } else if (width >= 1280) {  // HD примерно
+      } else if (width >= 1280) {
         setColumns(3);
       } else {
         setColumns(2);
@@ -74,8 +62,18 @@ const MainPage = () => {
 
     return () => window.removeEventListener('resize', updateColumns);
   }, []);
-    
-    // Или если пока нет маршрута:
+
+  const handleOpenClick = (moduleId) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    // ✅ Здесь можешь сделать переход на страницу модуля
+    navigate(`/module/${moduleId}`);
+
+    // Если пока нет маршрута, можно оставить alert
     // alert(`Открываем модуль с id: ${moduleId}`);
   };
 
