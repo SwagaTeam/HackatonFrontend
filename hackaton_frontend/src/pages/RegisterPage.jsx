@@ -27,11 +27,12 @@ export default function RegisterPage() {
     });
 
     if (response.ok) {
-      navigate("/");
-    } else {
-      const error = await response.json();
-      alert("Ошибка: " + JSON.stringify(error.errors));
-    }
+  navigate("/login");
+  } else {
+    const error = await response.json();
+    alert("Ошибка: " + JSON.stringify(error.errors));
+  }
+
   };
 
   return (
