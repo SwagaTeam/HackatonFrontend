@@ -1,5 +1,4 @@
-// src/App.js
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, NavLink } from "react-router-dom";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import MainPage from "./pages/MainPage";
@@ -12,13 +11,17 @@ function App() {
         <Link to="/register">Регистрация</Link> |{" "}
         <Link to="/login">Вход</Link>
       </nav>
+       <img
+        src="/panda_1.png"
+        alt="Красная панда"
+        className="panda-mascot"
+      />
       <Routes>
         <Route path="/" element={<MainPage />} />     
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
       </Routes>
     </Router>
+    
   );
 }
-
-export default App;
