@@ -19,20 +19,30 @@ const BASE_LEFT = 110;
 const ModulePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
-  // Все хуки вызываются здесь
+  const circleSize = 120;
+  const circleBorder = 4;
+  const circleRadius = circleSize / 2 + circleBorder;
   const { user, loading: loadingUser } = useContext(UserContext);
-
+  const maxRight = window.innerWidth - circleSize - 20; // отступ справа 20px
+  const maxBottom = window.innerHeight - circleSize - 20; // отступ снизу 20px
   const [module, setModule] = useState(null);
   const [loadingModule, setLoadingModule] = useState(true);
   const [error, setError] = useState(null);
   const [coordsList, setCoordsList] = useState([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const numericId = id.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) + 1;
 
-  const circleSize = 120;
-  const circleBorder = 4;
-  const circleRadius = circleSize / 2 + circleBorder;
+
+
+  // Обработчик изменения размера окна
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     setLoadingModule(true);
@@ -46,31 +56,40 @@ const ModulePage = () => {
         setModule(data);
 
         let prevCoord = null;
+        const MAX_VERTICAL_JITTER = MIN_VERTICAL_GAP * 1.5; // максимум случайного сдвига вниз
+
         const calculatedCoords = data.levels.map((level, index) => {
-          const offsetX = (pseudoRandom(numericId * 5000 + index * 91) * 2 - 1) * MAX_HORIZONTAL_OFFSET;
+          const offsetXRaw = (pseudoRandom(numericId * 5000 + index * 91) * 2 - 1) * MAX_HORIZONTAL_OFFSET;
+          let offsetX = BASE_LEFT + offsetXRaw;
+
+          // Ограничиваем offsetX чтобы не выходить за maxRight и не выходить за левый край (min 20)
+          offsetX = Math.min(Math.max(offsetX, 20), maxRight);
 
           let posY;
           if (!prevCoord) {
-            posY = pseudoRandom(numericId * 1000 + index * 37) * MIN_VERTICAL_GAP * 2;
+            // Для первого уровня просто рандом по высоте в пределах от 20 до MIN_VERTICAL_GAP*2
+            posY = 20 + pseudoRandom(numericId * 1000 + index * 37) * MIN_VERTICAL_GAP * 2;
           } else {
-            posY = prevCoord.top + MIN_VERTICAL_GAP;
-            const verticalJitter = (pseudoRandom(numericId * 2000 + index * 57) - 0.5) * MIN_VERTICAL_GAP / 2;
-            posY += verticalJitter;
+            // Базовый posY - минимум, чтобы уровень был ниже предыдущего на MIN_VERTICAL_GAP
+            const baseY = prevCoord.top + MIN_VERTICAL_GAP;
 
-            const dx = BASE_LEFT + offsetX - prevCoord.left;
-            const dy = posY - prevCoord.top;
-            const dist = Math.sqrt(dx * dx + dy * dy);
+            // Добавляем случайный дополнительный сдвиг вниз (0...MAX_VERTICAL_JITTER)
+            const jitter = pseudoRandom(numericId * 2000 + index * 57) * MAX_VERTICAL_JITTER;
 
-            if (dist < MIN_DISTANCE) {
-              const neededDy = Math.sqrt(MIN_DISTANCE * MIN_DISTANCE - dx * dx);
-              posY = prevCoord.top + neededDy;
-            }
+            posY = baseY + jitter;
+
+            // Гарантируем, что posY не меньше предыдущего (вдруг jitter отрицательный, хотя тут не будет)
+            if (posY < prevCoord.top) posY = prevCoord.top + MIN_VERTICAL_GAP;
           }
 
-          const coord = { top: posY, left: BASE_LEFT + offsetX };
+          // Ограничиваем posY чтобы не выходить за maxBottom и не быть меньше 20
+          posY = Math.min(Math.max(posY, 20), maxBottom);
+
+          const coord = { top: posY, left: offsetX };
           prevCoord = coord;
           return coord;
         });
+
 
         setCoordsList(calculatedCoords);
         setLoadingModule(false);
@@ -79,66 +98,62 @@ const ModulePage = () => {
         setError(err.message);
         setLoadingModule(false);
       });
-  }, [id, numericId]);
+  }, [id, numericId, isMobile]);
 
-  // Условные проверки идут после хуков и до возврата JSX
   if (loadingUser) return <div>Загрузка данных пользователя...</div>;
   if (loadingModule) return <div>Загрузка модуля...</div>;
   if (error) return <div>Ошибка: {error}</div>;
   if (!module) return <div>Модуль не найден</div>;
 
   const ConnectorLine = ({ from, to }) => {
-  const nameHeight = 35;
-  const wrapperWidth = 160;
-  const circleSize = 120;
-  const circleBorder = 4;
-  const circleDiameter = circleSize + 2 * circleBorder; // 128px
-  const circleRadius = circleDiameter / 2; // 64px
+    const nameHeight = 35;
+    const wrapperWidth = 160;
+    const circleSize = 120;
+    const circleBorder = 4;
+    const circleDiameter = circleSize + 2 * circleBorder; // 128px
+    const circleRadius = circleDiameter / 2; // 64px
 
-  // Центры кругов внутри wrapper
-  const centerXFrom = from.left + (wrapperWidth - circleDiameter) / 2 + circleRadius;
-  const centerYFrom = from.top + nameHeight + circleRadius;
+    // Центры кругов внутри wrapper
+    const centerXFrom = from.left + (wrapperWidth - circleDiameter) / 2 + circleRadius;
+    const centerYFrom = from.top + nameHeight + circleRadius;
 
-  const centerXTo = to.left + (wrapperWidth) / 2;
-  const centerYTo = to.top + nameHeight + circleRadius;
+    const centerXTo = to.left + (wrapperWidth) / 2;
+    const centerYTo = to.top + nameHeight + circleRadius;
 
-  let dx = centerXTo - centerXFrom;
-  let dy = centerYTo - centerYFrom;
-  let distance = Math.sqrt(dx * dx + dy * dy);
-  if (distance === 0) distance = 0.01; // чтобы избежать деления на 0
+    let dx = centerXTo - centerXFrom;
+    let dy = centerYTo - centerYFrom;
+    let distance = Math.sqrt(dx * dx + dy * dy);
+    if (distance === 0) distance = 0.01; // чтобы избежать деления на 0
 
-  // Нормализованный вектор направления
-  const ux = dx / distance;
-  const uy = dy / distance;
+    // Нормализованный вектор направления
+    const ux = dx / distance;
+    const uy = dy / distance;
 
-  // Начало линии — от края первого круга
-  const startX = centerXFrom + ux * circleRadius;
-const startY = centerYFrom + uy * circleRadius;
+    // Начало линии — от края первого круга
+    const startX = centerXFrom + ux * circleRadius;
+    const startY = centerYFrom + uy * circleRadius;
 
-const endX = centerXTo - ux * circleRadius;
-const endY = centerYTo - uy * circleRadius;
+    const endX = centerXTo - ux * circleRadius;
+    const endY = centerYTo - uy * circleRadius;
 
-const lineLength = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2) + 20;
+    const lineLength = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2) + 20;
 
+    // Угол для поворота линии
+    const angle = Math.atan2(endY - startY, endX - startX) * (180 / Math.PI);
 
-  // Угол для поворота линии
-  const angle = Math.atan2(endY - startY, endX - startX) * (180 / Math.PI);
-
-  return (
-    <div
-      className="level-connector"
-      style={{
-        width: lineLength,
-        top: startY,
-        left: startX,
-        transformOrigin: '0 50%',
-        transform: `rotate(${angle}deg)`
-      }}
-    />
-  );
-};
-
-
+    return (
+      <div
+        className="level-connector"
+        style={{
+          width: lineLength,
+          top: startY,
+          left: startX,
+          transformOrigin: '0 50%',
+          transform: `rotate(${angle}deg)`
+        }}
+      />
+    );
+  };
 
   return (
     <div className="module-page">
@@ -221,7 +236,8 @@ const lineLength = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2) + 20;
                   </div>
                 </div>
 
-                {index < module.levels.length - 1 && coordsList.length > index + 1 && (
+                {/* Рисуем линии только если НЕ мобильный */}
+                {!isMobile && index < module.levels.length - 1 && coordsList.length > index + 1 && (
                   <ConnectorLine from={coords} to={coordsList[index + 1]} key={`connector-${level.id}`} />
                 )}
               </React.Fragment>

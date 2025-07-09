@@ -41,11 +41,6 @@ const LevelPage = () => {
   const [chatLoading, setChatLoading] = useState(false);
   const [chatError, setChatError] = useState(null);
 
-  const [chatInput, setChatInput] = useState('');
-  const [chatResponse, setChatResponse] = useState(null);
-  const [chatLoading, setChatLoading] = useState(false);
-  const [chatError, setChatError] = useState(null);
-
   // Хуки вызываются всегда, на верхнем уровне:
   useEffect(() => {
     setLoading(true);
@@ -208,6 +203,17 @@ const LevelPage = () => {
       });
   };
 
+  const handlePrevious = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(prev => prev - 1);
+      setCheckResult(null);
+      setSelectedAnswerId(null);
+      setCheckError(null);
+      setMascotSrc(seatImg);
+      setIsBlocked(false);
+    }
+  };
+
   const handleNext = () => {
     if (currentIndex < questionIds.length - 1) {
       setCurrentIndex(prev => prev + 1);
@@ -223,7 +229,8 @@ const LevelPage = () => {
 
       const questionsCount = questionIds.length;
       const token = localStorage.getItem('token');
-      fetch(`http://localhost:5246/Level/is-level-completed?rightAnswers=${rightAnswers}&questionsCount=${questionsCount}&levelNumber=${level.levelNumber}`, {
+
+      fetch(`http://localhost:5246/Level/is-level-completed?rightAnswers=${rightAnswers}&questionsCount=${questionsCount}&lvlNumber=${level.levelNumber}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -231,20 +238,58 @@ const LevelPage = () => {
         }
       })
         .then(res => {
-          if (res.ok) {
-            navigate(-1);
-          } else {
+          if (!res.ok) {
             return res.text().then(text => {
-              throw new Error(text || 'Ошибка при проверке завершения уровня');
+              console.error('Ошибка ответа сервера:', text);
+              return false;
             });
+          }
+          return res.text();
+        })
+        .then(text => {
+          let isCompleted = false;
+
+          if (!text) {
+            // Пустой ответ — считаем, что уровень уже был пройден, просто возвращаемся
+            navigate(-1);
+            return;
+          }
+
+          try {
+            isCompleted = JSON.parse(text);
+          } catch (e) {
+            console.warn('Не удалось распарсить ответ как JSON, считаем как не пройдено');
+          }
+
+          if (isCompleted) {
+            navigate(-1);
+            setTimeout(() => {
+              window.location.reload();
+            }, 100);
+          } else {
+            alert('Уровень пройден менее чем на 80%, повторите попытку');
+            navigate(-1);
+            setTimeout(() => {
+              window.location.reload();
+            }, 100);
           }
         })
         .catch(err => {
-          alert('Ошибка при проверке завершения уровня: ' + err.message);
+          console.error('Ошибка при проверке завершения уровня:', err);
+          navigate(-1);
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
         });
     }
   };
 
+
+  const difficultyMap = {
+    1: { text: 'Легко', color: 'green' },
+    2: { text: 'Нормально', color: 'orange' },
+    3: { text: 'Сложно', color: 'red' }
+  };
 
   return (
     <>
@@ -312,7 +357,9 @@ const LevelPage = () => {
         <div className="level-page-container">
           <div className="level-header">
             Уровень {level.levelNumber}: {level.name}
-            <p>Сложность: {level.difficulty}</p>
+            <p style={{ color: difficultyMap[level.difficulty]?.color || 'black' }}>
+              Сложность: {difficultyMap[level.difficulty]?.text || 'Неизвестно'}
+            </p>
           </div>
 
           <button className="show-theory-btn" onClick={() => setSidebarOpen(true)}>
@@ -324,6 +371,13 @@ const LevelPage = () => {
           ) : currentQuestion ? (
             <>
               <div className="question-block">
+                <button
+                  className="arrow-back-button"
+                  onClick={() => navigate(-1)}
+                  title="Вернуться на предыдущую страницу"
+                >
+                  ←
+                </button>
                 <h3>Вопрос {currentIndex + 1}:</h3>
                 <p>{currentQuestion.title}</p>
               </div>
@@ -338,7 +392,6 @@ const LevelPage = () => {
                         name="answer"
                         checked={selectedAnswerId === answer.id}
                         onChange={() => setSelectedAnswerId(answer.id)}
-                        disabled={isBlocked}
                         disabled={isBlocked}
                       />
                       <label htmlFor={`answer-${index}`}>{answer.text}</label>
@@ -378,23 +431,23 @@ const LevelPage = () => {
             <p>Вопрос не найден</p>
           )}
 
-          <div className="buttons-wrapper" style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <div className="back-button-wrapper">
-              <button
-                className="back-button"
-                onClick={() => {
-                  navigate(-1);
-                  setMascotSrc(seatImg);
-                }}
-              >
-                Назад
-              </button>
-            </div>
-            <div className="back-button-wrapper">
-              <button onClick={handleNext} className="back-button">
-                Далее
-              </button>
-            </div>
+          <div className="buttons-wrapper" style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+            <button
+              className="back-button"
+              onClick={handlePrevious}
+              disabled={currentIndex === 0}
+              title="Предыдущий вопрос"
+            >
+              Назад
+            </button>
+
+            <button
+              className="back-button"
+              onClick={handleNext}
+              title="Следующий вопрос"
+            >
+              Далее
+            </button>
           </div>
         </div>
 
@@ -414,12 +467,11 @@ const LevelPage = () => {
             style={{ width: '100%', height: 'auto', userSelect: 'none' }}
             draggable={false}
           />
-          <div className="mascot-wrapper">
-            <img src={mascotSrc} alt="Mascot" draggable={false} />
-          </div>
         </div>
-      </>
-      );
+      </div>
+    </>
+  );
 };
 
-      export default LevelPage;
+export default LevelPage;
+

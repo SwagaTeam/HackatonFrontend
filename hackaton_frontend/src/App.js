@@ -7,9 +7,10 @@ import ModulePage from "./pages/ModulePage";
 import Header from "./components/Header";
 import LevelPage from './pages/LevelPage';
 
-import { UserProvider } from "./context/UserContext"; 
+import { UserProvider } from "./context/UserContext";
 import "./pages/AuthPages.css";
 import "./App.css";
+import ProfilePage from "./pages/ProfilePage";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/" element={<MainPage />} />
           <Route path="/module/:id" element={<ModulePage />} />
           <Route path="/level/:id" element={<LevelPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </Router>
     </UserProvider>

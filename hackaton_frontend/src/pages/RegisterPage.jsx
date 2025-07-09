@@ -27,7 +27,7 @@ export default function RegisterPage() {
     });
 
     if (response.ok) {
-      navigate("/");
+      navigate("/login");
     } else {
       const error = await response.json();
       alert("Ошибка: " + JSON.stringify(error.errors));
@@ -62,7 +62,7 @@ export default function RegisterPage() {
         <button type="submit">Зарегистрироваться</button>
       </form>
       <div class="nav-buttons">
-          <a href="/login">Войти</a>    
+        <a href="/login">Войти</a>
       </div>
       <img
         src="/panda_1.png"

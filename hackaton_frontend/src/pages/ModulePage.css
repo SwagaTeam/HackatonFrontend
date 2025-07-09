@@ -49,10 +49,19 @@
   position: relative;
   flex: 1;
   min-width: 600px;
-  height: 80vh;
+  /* Уберём фиксированную высоту */
+  /* height: 80vh; */
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  /* Прижать уровни к верху */
+}
+
+.levels-inner {
+  position: relative;
+  /* высота задаётся динамически из React */
+  /* добавим чтобы занимал ширину контейнера */
+  width: 100%;
 }
 
 .levels-background-wrapper {
@@ -60,21 +69,25 @@
   top: 0;
   left: 0;
   width: 100%;
+  /* высота должна равняться высоте .levels-inner */
   height: 100%;
   z-index: -1;
   overflow: hidden;
 }
 
+/* (Если нужно) прижать фон к верхнему левому краю */
 .levels-background {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+  /* Теперь фон растянется на всю высоту levels-inner */
   background-image: url('../../public/map.png');
   background-size: cover;
   opacity: 0.5;
   pointer-events: none;
+
   mask-image:
     linear-gradient(to top, transparent, black 20%),
     linear-gradient(to right, transparent, black 20%),
@@ -158,7 +171,8 @@
 
 .level-connector {
   position: absolute;
-  border-top: 4px dashed #3a3a3a; /* стало жирнее */
+  border-top: 4px dashed #3a3a3a;
+  /* стало жирнее */
   pointer-events: none;
   background: none;
   height: 0;
@@ -175,5 +189,104 @@
   .module-left {
     margin-right: 0;
     margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .module-page {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .module-left {
+    margin-right: 0;
+    margin-bottom: 20px;
+    width: 90%;
+  }
+
+  .levels-container {
+    min-width: auto;
+    width: 100%;
+    height: auto;
+    overflow-x: hidden;
+  }
+
+  .levels-inner {
+    height: auto;
+  }
+
+  .level-wrapper {
+    width: 120px;
+  }
+
+  .level-name {
+    font-size: 14px;
+    width: 140px;
+  }
+
+  .level-circle {
+    width: 80px;
+    height: 80px;
+    border-width: 3px;
+    font-size: 16px;
+  }
+
+  .level-difficulty {
+    font-size: 12px;
+    max-width: 100px;
+    padding: 4px 8px;
+  }
+
+  .back-button {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+
+  .levels-background {
+    background-size: contain;
+  }
+}
+
+@media (max-width: 480px) {
+  .level-wrapper {
+    width: 100px;
+  }
+
+  .level-name {
+    font-size: 12px;
+    width: 120px;
+  }
+
+  .level-circle {
+    width: 60px;
+    height: 60px;
+    border-width: 2px;
+    font-size: 14px;
+  }
+
+  .level-difficulty {
+    font-size: 10px;
+    max-width: 80px;
+    padding: 2px 6px;
+  }
+}
+
+@media (max-width: 768px) {
+  .levels-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: auto !important;
+  }
+
+  .level-wrapper {
+    position: static !important;
+    margin: 20px 0;
+    width: auto;
+  }
+
+  .level-name {
+    width: 100%;
+    text-align: center;
   }
 }
