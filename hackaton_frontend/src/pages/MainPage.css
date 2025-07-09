@@ -1,30 +1,26 @@
-/* Контейнер */
 .main-container {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   padding: 2rem;
   margin: 0 auto;
-  max-width: 1200px;
+  max-width: 1400px;
 }
 
-/* Хедер */
 .header {
   margin-bottom: 2rem;
   text-align: center;
 }
 
-/* Сетка карточек */
 .module-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 2rem;
+  /* grid-template-columns задаётся динамически из inline стилей */
 }
 
-/* Карточка модуля */
 .module-card {
   padding: 1.5rem;
   border-radius: 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  color: #000;
+  color: white;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -36,31 +32,58 @@
   transform: scale(1.02);
 }
 
-/* Заголовок */
 .module-title {
   font-size: 1.2rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
 }
 
-/* Уровни */
 .module-levels {
   font-size: 0.95rem;
   margin-bottom: 1.5rem;
 }
 
-/* Кнопка */
 .module-button {
-  align-self: flex-start;
+  width: 90%;               /* Почти вся ширина карточки */
+  margin: 0 auto;           /* Центрирование по горизонтали */
+  display: flex;            /* Выравнивание текста и стрелки */
+  align-items: center;
+  justify-content: center;
+  gap: 8px;                 /* Отступ между текстом и стрелкой */
   background-color: transparent;
-  border: 2px solid #333;
+  border: 2px solid white;  /* Белая обводка */
   padding: 0.5rem 1rem;
   border-radius: 12px;
   cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s ease;
+  font-weight: 600;
+  color: white;
+  font-size: 1rem;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  user-select: none;
 }
 
 .module-button:hover {
-  background-color: #fff;
+  background-color: white;
+  color: #ca133e;
+}
+
+/* Стрелка белого цвета */
+.module-button::after {
+  content: '→';
+  font-weight: bold;
+  font-size: 1.2rem;
+  transition: transform 0.3s ease, color 0.3s ease;
+  display: inline-block;
+  color: white;
+}
+
+.module-button:hover::after {
+  transform: translateX(6px);
+  color: #555; /* Темный оттенок стрелки при ховере */
+}
+
+.loading {
+  font-size: 1.5rem;
+  text-align: center;
+  padding: 3rem;
 }
