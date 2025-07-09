@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './LevelPage.css';
+import { UserContext } from '../context/UserContext';
 
 const LevelPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  const { user, loading: loadingUser } = useContext(UserContext);
 
   const [level, setLevel] = useState(null);
   const [questionIds, setQuestionIds] = useState([]);
@@ -26,15 +29,16 @@ const LevelPage = () => {
   const [checking, setChecking] = useState(false);
   const [checkError, setCheckError] = useState(null);
 
-  // Маскот: исходное изображение
   const seatImg = require('../seat.png');
   const jumpImg = require('../jump.png');
   const [mascotSrc, setMascotSrc] = useState(seatImg);
 
-  // Новый стейт для количества неправильных попыток и блокировки
-  const [wrongAttempts, setWrongAttempts] = useState(0);
+  // Если хочешь убрать предупреждение об unused, можно пока закомментировать или использовать для отображения:
+  // const [wrongAttempts, setWrongAttempts] = useState(0);
+
   const [isBlocked, setIsBlocked] = useState(false);
 
+  // Хуки вызываются всегда, на верхнем уровне:
   useEffect(() => {
     setLoading(true);
     fetch(`http://localhost:5246/Level/get-by/${id}`)
@@ -64,8 +68,6 @@ const LevelPage = () => {
       setCheckError(null);
       setMascotSrc(seatImg);
 
-      // Сбрасываем счетчик неправильных попыток и блокировку при смене вопроса
-      setWrongAttempts(0);
       setIsBlocked(false);
 
       fetch(`http://localhost:5246/Question/get-by/${questionId}`)
@@ -84,19 +86,11 @@ const LevelPage = () => {
     }
   }, [questionIds, currentIndex, seatImg]);
 
-  const handleNext = () => {
-    if (currentIndex < questionIds.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-      setCheckResult(null);
-      setSelectedAnswerId(null);
-      setCheckError(null);
-      setMascotSrc(seatImg);
-      // при переходе счетчик и блокировка сбросятся в useEffect
-    } else {
-      alert('Вы завершили все вопросы!');
-      // navigate('/next-page');
-    }
-  };
+  if (loadingUser) return <div className="level-page-wrapper">Загрузка данных пользователя...</div>;
+
+  if (loading) return <div className="level-page-wrapper">Загрузка уровня...</div>;
+  if (error) return <div className="level-page-wrapper">Ошибка: {error}</div>;
+  if (!level) return <div className="level-page-wrapper">Уровень не найден</div>;
 
   const fetchShortDescription = () => {
     if (!level?.theory?.text) return;
@@ -127,7 +121,7 @@ const LevelPage = () => {
   };
 
   const handleCheck = () => {
-    if (isBlocked) return; // если заблокирован - не проверяем
+    if (isBlocked) return;
 
     if (selectedAnswerId === null) {
       alert('Пожалуйста, выберите ответ перед проверкой.');
@@ -139,7 +133,7 @@ const LevelPage = () => {
     setCheckResult(null);
 
     const userAnswerRequest = {
-      UserId: 1,
+      UserId: user?.id || 1,
       QuestionId: currentQuestion.id,
       SelectedAnswers: [selectedAnswerId],
     };
@@ -158,17 +152,9 @@ const LevelPage = () => {
         setChecking(false);
         if (data.isAllAnswersCorrect) {
           setMascotSrc(jumpImg);
-          // при правильном ответе можно сбросить попытки или оставить — тут не обязательно
         } else {
           setMascotSrc(seatImg);
-          // увеличиваем счетчик неправильных попыток
-          setWrongAttempts(prev => {
-            const newCount = prev + 1;
-            if (newCount >= 2) {
-              setIsBlocked(true);
-            }
-            return newCount;
-          });
+          setIsBlocked(true);
         }
       })
       .catch(err => {
@@ -178,19 +164,51 @@ const LevelPage = () => {
       });
   };
 
-  if (loading) return <div className="level-page-wrapper">Загрузка уровня...</div>;
-  if (error) return <div className="level-page-wrapper">Ошибка: {error}</div>;
-  if (!level) return <div className="level-page-wrapper">Уровень не найден</div>;
+  const handleNext = () => {
+    if (currentIndex < questionIds.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+      setCheckResult(null);
+      setSelectedAnswerId(null);
+      setCheckError(null);
+      setMascotSrc(seatImg);
+      setIsBlocked(false);
+    } else {
+      const rightAnswers = questionIds.filter((_, idx) => {
+        return idx < currentIndex || (checkResult && checkResult.isAllAnswersCorrect);
+      }).length;
+
+      const questionsCount = questionIds.length;
+      const token = localStorage.getItem('token');
+      fetch(`http://localhost:5246/Level/is-level-completed?rightAnswers=${rightAnswers}&questionsCount=${questionsCount}&levelNumber=${level.levelNumber}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+        .then(res => {
+          if (res.ok) {
+            navigate(-1);
+          } else {
+            return res.text().then(text => {
+              throw new Error(text || 'Ошибка при проверке завершения уровня');
+            });
+          }
+        })
+        .catch(err => {
+          alert('Ошибка при проверке завершения уровня: ' + err.message);
+        });
+    }
+  };
+
 
   return (
     <>
-      {/* Sidebar overlay */}
       <div
         className={`sidebar-overlay ${sidebarOpen ? 'active' : ''}`}
         onClick={() => setSidebarOpen(false)}
       ></div>
 
-      {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)}>
           ×
@@ -242,9 +260,8 @@ const LevelPage = () => {
                 <p>{currentQuestion.title}</p>
               </div>
 
-              {/* Обертка для ответов и кнопки Проверить */}
-              <div className="answers-block-wrapper" style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-                <div className="answers-block" style={{width: '100%'}}>
+              <div className="answers-block-wrapper" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div className="answers-block" style={{ width: '100%' }}>
                   {currentQuestion.answers?.map((answer, index) => (
                     <div key={index}>
                       <input
@@ -253,7 +270,7 @@ const LevelPage = () => {
                         name="answer"
                         checked={selectedAnswerId === answer.id}
                         onChange={() => setSelectedAnswerId(answer.id)}
-                        disabled={isBlocked} // при блокировке нельзя менять ответ
+                        disabled={isBlocked}
                       />
                       <label htmlFor={`answer-${index}`}>{answer.text}</label>
                     </div>
@@ -271,14 +288,11 @@ const LevelPage = () => {
                 </button>
               </div>
 
-              {/* Результат проверки */}
               {checkError && <p className="error-text">Ошибка: {checkError}</p>}
 
               {checkResult && (
                 <div
-                  className={`check-result ${
-                    checkResult.isAllAnswersCorrect ? 'correct' : 'incorrect'
-                  }`}
+                  className={`check-result ${checkResult.isAllAnswersCorrect ? 'correct' : 'incorrect'}`}
                 >
                   {checkResult.isAllAnswersCorrect
                     ? 'Ответ правильный! 🎉'
@@ -296,7 +310,7 @@ const LevelPage = () => {
             <p>Вопрос не найден</p>
           )}
 
-          <div className="buttons-wrapper" style={{display: 'flex', justifyContent: 'space-between'}}>
+          <div className="buttons-wrapper" style={{ display: 'flex', justifyContent: 'space-between' }}>
             <div className="back-button-wrapper">
               <button
                 className="back-button"
@@ -316,7 +330,6 @@ const LevelPage = () => {
           </div>
         </div>
 
-        {/* Блок с маскотом справа */}
         <div
           style={{
             width: '10%',

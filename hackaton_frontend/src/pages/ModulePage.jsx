@@ -18,13 +18,15 @@ const BASE_LEFT = 110;
 
 const ModulePage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+
+  // Все хуки вызываются здесь
+  const { user, loading: loadingUser } = useContext(UserContext);
+
   const [module, setModule] = useState(null);
   const [loadingModule, setLoadingModule] = useState(true);
   const [error, setError] = useState(null);
   const [coordsList, setCoordsList] = useState([]);
-  const navigate = useNavigate();
-
-  const { user, loading: loadingUser } = useContext(UserContext);
 
   const numericId = id.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) + 1;
   const circleSize = 160;
@@ -76,6 +78,7 @@ const ModulePage = () => {
       });
   }, [id, numericId]);
 
+  // Условные проверки идут после хуков и до возврата JSX
   if (loadingUser) return <div>Загрузка данных пользователя...</div>;
   if (loadingModule) return <div>Загрузка модуля...</div>;
   if (error) return <div>Ошибка: {error}</div>;
@@ -120,7 +123,6 @@ const ModulePage = () => {
       />
     );
   };
-
 
   return (
     <div className="module-page">
