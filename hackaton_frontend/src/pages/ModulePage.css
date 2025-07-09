@@ -17,6 +17,19 @@
   margin-bottom: 8px;
 }
 
+.module-title{
+  color:#7C1521;
+}
+.module-text{
+  color: black;
+
+}
+
+.module-page {
+  display: flex !important;
+}
+
+
 .module-description {
   font-size: 16px;
   color: #333;
@@ -57,8 +70,6 @@
   justify-content: center;
   align-items: center;
   overflow-x: auto;
-
-  /* добавлено для адаптивности */
   min-width: 0;
 }
 
@@ -172,6 +183,12 @@
   height: 0;
   z-index: 0;
 }
+
+body.module-page-body {
+  background-color: white !important;
+  background-image: none !important;
+}
+
 
 @media (max-width: 768px) {
   /* Отключаем горизонтальный скролл для всей страницы */

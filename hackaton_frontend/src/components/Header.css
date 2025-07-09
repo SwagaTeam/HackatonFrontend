@@ -2,10 +2,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: white; /* бордовый */
+  background-color: transparent; /* Сделано прозрачным */
   padding: 10px 20px;
   color: #ca133e;
 }
+
 
 .left-section {
   display: flex;

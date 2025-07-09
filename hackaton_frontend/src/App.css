@@ -1,3 +1,4 @@
+/* Контейнер формы авторизации */
 .auth-container {
   border: 2px solid #ca133e;
   border-radius: 16px;
@@ -9,11 +10,29 @@
   position: relative;
 }
 
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-image: url('./background.png');
+  background-size: cover;      /* покрывает весь экран */
+  background-repeat: no-repeat;
+  background-position: center;
+  background-attachment: fixed; /* фиксированное, чтобы не сдвигалось при прокрутке */
+  color: #ca133e; /* если нужно, цвет текста по умолчанию */
+}
+
+
+/* Заголовок формы */
 .auth-container h2 {
   color: #ca133e;
   margin-bottom: 20px;
 }
 
+/* Поля ввода */
 .auth-form input {
   width: 100%;
   padding: 12px;
@@ -29,6 +48,7 @@
   box-shadow: 0 0 8px rgba(255, 77, 77, 0.4);
 }
 
+/* Кнопка отправки */
 .auth-form button {
   background-color: #ca133e;
   color: white;
@@ -46,6 +66,7 @@
   transform: translateY(-2px);
 }
 
+/* Нижний текст под формой */
 .auth-footer {
   margin-top: 20px;
   font-size: 14px;
@@ -53,19 +74,20 @@
   opacity: 0.8;
 }
 
+/* Панда-талисман, фиксированная картинка */
 .panda-mascot {
-  position: fixed;       /* фиксируем относительно окна браузера */
-  left: 20px;            /* отступ слева */
-  bottom: 20px;          /* отступ снизу */
-  width: 350px;          /* ширина (подбери по вкусу, не слишком маленькая) */
-  height: auto;          /* сохраняет пропорции */
-  opacity: 0.85;         /* слегка прозрачная, чтобы не мешала */
-  user-select: none;     /* чтобы нельзя было выделить */
-  pointer-events: none;  /* чтобы клики проходили сквозь картинку */
-  z-index: 1000;         /* поверх всего */
-  /*transition: transform 0.3s ease;*/  
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  width: 350px;
+  height: auto;
+  opacity: 0.85;
+  user-select: none;
+  /* pointer-events убран, чтобы работал hover */
+  z-index: 1000;
+  transition: transform 0.3s ease;
 }
 
 .panda-mascot:hover {
-  transform: scale(1.05); /* небольшой эффект при наведении */
+  transform: scale(1.05);
 }

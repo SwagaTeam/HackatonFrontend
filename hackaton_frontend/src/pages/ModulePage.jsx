@@ -102,6 +102,18 @@ const ModulePage = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+
+  useEffect(() => {
+  // Добавляем класс при монтировании
+  document.body.classList.add('module-page-body');
+
+  // Убираем класс при размонтировании
+  return () => {
+    document.body.classList.remove('module-page-body');
+  };
+}, []);
+
+
   if (loadingUser) return <div>Загрузка данных пользователя...</div>;
   if (loadingModule) return <div>Загрузка модуля...</div>;
   if (error) return <div>Ошибка: {error}</div>;
@@ -160,8 +172,8 @@ const ModulePage = () => {
   return (
     <div className="module-page">
       <div className="module-left">
-        <h2>Модуль: {module.title}</h2>
-        <p className="module-description">{module.text}</p>
+        <h2 className='module-title'>Модуль: {module.title}</h2>
+        <p className="module-text">{module.text}</p>
         <div className="back-button-wrapper">
           <button className="back-button" onClick={() => navigate(-1)}>Назад</button>
         </div>

@@ -36,6 +36,12 @@ const LevelPage = () => {
   const [chatResponse, setChatResponse] = useState(null);
   const [chatLoading, setChatLoading] = useState(false);
   const [chatError, setChatError] = useState(null);
+useEffect(() => {
+  document.body.classList.add('level-page-body');
+  return () => {
+    document.body.classList.remove('level-page-body');
+  };
+}, []);
 
   useEffect(() => {
     setLoading(true);

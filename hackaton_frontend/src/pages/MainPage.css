@@ -15,6 +15,10 @@
   gap: 2rem;
   /* grid-template-columns задаётся динамически из inline стилей */
 }
+.header h1 {
+  color: white;
+}
+
 
 .module-card {
   padding: 1.5rem;
@@ -26,8 +30,7 @@
   justify-content: space-between;
   transition: transform 0.2s ease;
   min-height: 180px;
-    border: 3px solid #63071E; 
-
+  border: 3px solid #63071E; 
 }
 
 .module-card:hover {
