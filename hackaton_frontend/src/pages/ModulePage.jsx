@@ -29,7 +29,10 @@ const ModulePage = () => {
   const [coordsList, setCoordsList] = useState([]);
 
   const numericId = id.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) + 1;
-  const circleSize = 160;
+
+  const circleSize = 120;
+  const circleBorder = 4;
+  const circleRadius = circleSize / 2 + circleBorder;
 
   useEffect(() => {
     setLoadingModule(true);
@@ -85,44 +88,57 @@ const ModulePage = () => {
   if (!module) return <div>Модуль не найден</div>;
 
   const ConnectorLine = ({ from, to }) => {
-    const nameHeight = 35; // Примерно высота названия
-    const circleRadius = 75; // circleSize / 2
+  const nameHeight = 35;
+  const wrapperWidth = 160;
+  const circleSize = 120;
+  const circleBorder = 4;
+  const circleDiameter = circleSize + 2 * circleBorder; // 128px
+  const circleRadius = circleDiameter / 2; // 64px
 
-    const fromX = from.left + circleRadius;
-    const fromY = from.top + nameHeight + circleRadius;
+  // Центры кругов внутри wrapper
+  const centerXFrom = from.left + (wrapperWidth - circleDiameter) / 2 + circleRadius;
+  const centerYFrom = from.top + nameHeight + circleRadius;
 
-    const toX = to.left + circleRadius;
-    const toY = to.top + nameHeight + circleRadius;
+  const centerXTo = to.left + (wrapperWidth) / 2;
+  const centerYTo = to.top + nameHeight + circleRadius;
 
-    const dx = toX - fromX;
-    const dy = toY - fromY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+  let dx = centerXTo - centerXFrom;
+  let dy = centerYTo - centerYFrom;
+  let distance = Math.sqrt(dx * dx + dy * dy);
+  if (distance === 0) distance = 0.01; // чтобы избежать деления на 0
 
-    const ux = dx / distance;
-    const uy = dy / distance;
+  // Нормализованный вектор направления
+  const ux = dx / distance;
+  const uy = dy / distance;
 
-    const startX = fromX + ux * circleRadius;
-    const startY = fromY + uy * circleRadius;
+  // Начало линии — от края первого круга
+  const startX = centerXFrom + ux * circleRadius;
+const startY = centerYFrom + uy * circleRadius;
 
-    const endX = toX - ux * circleRadius;
-    const endY = toY - uy * circleRadius;
+const endX = centerXTo - ux * circleRadius;
+const endY = centerYTo - uy * circleRadius;
 
-    const lineLength = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
+const lineLength = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2) + 20;
 
-    return (
-      <div
-        className="level-connector"
-        style={{
-          width: lineLength,
-          top: startY,
-          left: startX,
-          transformOrigin: '0 50%',
-          transform: `rotate(${angle}deg)`
-        }}
-      />
-    );
-  };
+
+  // Угол для поворота линии
+  const angle = Math.atan2(endY - startY, endX - startX) * (180 / Math.PI);
+
+  return (
+    <div
+      className="level-connector"
+      style={{
+        width: lineLength,
+        top: startY,
+        left: startX,
+        transformOrigin: '0 50%',
+        transform: `rotate(${angle}deg)`
+      }}
+    />
+  );
+};
+
+
 
   return (
     <div className="module-page">
