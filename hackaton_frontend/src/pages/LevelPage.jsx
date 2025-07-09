@@ -24,7 +24,6 @@ const LevelPage = () => {
   const [shortDescError, setShortDescError] = useState(null);
 
   const [selectedAnswerId, setSelectedAnswerId] = useState(null);
-
   const [checkResult, setCheckResult] = useState(null);
   const [checking, setChecking] = useState(false);
   const [checkError, setCheckError] = useState(null);
@@ -33,10 +32,19 @@ const LevelPage = () => {
   const jumpImg = require('../jump.png');
   const [mascotSrc, setMascotSrc] = useState(seatImg);
 
-  // Если хочешь убрать предупреждение об unused, можно пока закомментировать или использовать для отображения:
-  // const [wrongAttempts, setWrongAttempts] = useState(0);
-
+  // Новый стейт для количества неправильных попыток и блокировки
+  const [wrongAttempts, setWrongAttempts] = useState(0);
   const [isBlocked, setIsBlocked] = useState(false);
+
+  const [chatInput, setChatInput] = useState('');
+  const [chatResponse, setChatResponse] = useState(null);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatError, setChatError] = useState(null);
+
+  const [chatInput, setChatInput] = useState('');
+  const [chatResponse, setChatResponse] = useState(null);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatError, setChatError] = useState(null);
 
   // Хуки вызываются всегда, на верхнем уровне:
   useEffect(() => {
@@ -68,6 +76,8 @@ const LevelPage = () => {
       setCheckError(null);
       setMascotSrc(seatImg);
 
+      // Сбрасываем счетчик неправильных попыток и блокировку при смене вопроса
+      setWrongAttempts(0);
       setIsBlocked(false);
 
       fetch(`http://localhost:5246/Question/get-by/${questionId}`)
@@ -84,7 +94,7 @@ const LevelPage = () => {
           setQuestionLoading(false);
         });
     }
-  }, [questionIds, currentIndex, seatImg]);
+  }, [questionIds, currentIndex]);
 
   if (loadingUser) return <div className="level-page-wrapper">Загрузка данных пользователя...</div>;
 
@@ -120,9 +130,39 @@ const LevelPage = () => {
       });
   };
 
+  const fetchAiAnswer = () => {
+    if (!level?.theory?.text || chatInput.trim() === '') return;
+
+    setChatLoading(true);
+    setChatError(null);
+    setChatResponse(null);
+
+    const payload = {
+      question: chatInput,
+      text: level.theory.text,
+    };
+
+    fetch('http://localhost:5246/Ai/GetAnswerQuestions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Ошибка при получении ответа от AI');
+        return res.text();
+      })
+      .then(data => {
+        setChatResponse(data);
+        setChatLoading(false);
+      })
+      .catch(err => {
+        setChatError(err.message);
+        setChatLoading(false);
+      });
+  };
+
   const handleCheck = () => {
     if (isBlocked) return;
-
     if (selectedAnswerId === null) {
       alert('Пожалуйста, выберите ответ перед проверкой.');
       return;
@@ -153,6 +193,11 @@ const LevelPage = () => {
         if (data.isAllAnswersCorrect) {
           setMascotSrc(jumpImg);
         } else {
+          setWrongAttempts(prev => {
+            const newCount = prev + 1;
+            if (newCount >= 2) setIsBlocked(true);
+            return newCount;
+          });
           setMascotSrc(seatImg);
           setIsBlocked(true);
         }
@@ -160,7 +205,6 @@ const LevelPage = () => {
       .catch(err => {
         setCheckError(err.message);
         setChecking(false);
-        setMascotSrc(seatImg);
       });
   };
 
@@ -207,41 +251,65 @@ const LevelPage = () => {
       <div
         className={`sidebar-overlay ${sidebarOpen ? 'active' : ''}`}
         onClick={() => setSidebarOpen(false)}
-      ></div>
+      />
 
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-        <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)}>
-          ×
-        </button>
+        <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)}>×</button>
+
         {level.theory ? (
           <>
             <h2 className="sidebar-title">{level.theory.title}</h2>
-            <div className="sidebar-text">{level.theory.text}</div>
 
-            <button
-              className="fetch-short-desc-btn"
-              onClick={fetchShortDescription}
-              disabled={shortDescLoading}
-            >
-              {shortDescLoading ? 'Загрузка краткой информации...' : 'Получить краткую информацию'}
-            </button>
+            <div className="sidebar-content-wrapper">
+              <div className="sidebar-text">{level.theory.text}</div>
 
-            {shortDescError && <p className="error-text">Ошибка: {shortDescError}</p>}
+              <button
+                className="fetch-short-desc-btn"
+                onClick={fetchShortDescription}
+                disabled={shortDescLoading}
+              >
+                {shortDescLoading ? 'Загрузка краткой информации...' : 'Получить краткую информацию'}
+              </button>
 
-            {shortDescription && (
-              <div className="sidebar-short-description">
-                <h3>Краткая информация</h3>
-                <p>{shortDescription}</p>
+              {shortDescError && <p className="error-text">Ошибка: {shortDescError}</p>}
+
+              {shortDescription && (
+                <div className="sidebar-short-description">
+                  <h3>Краткая информация</h3>
+                  <p>{shortDescription}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="chat-container">
+              <div className="chat-messages">
+                {chatResponse && (
+                  <div className="chat-message ai">
+                    <strong>Ответ:</strong> {chatResponse}
+                  </div>
+                )}
               </div>
-            )}
+              <div className="chat-input-wrapper">
+                <textarea
+                  className="chat-input"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="Введите вопрос..."
+                />
+                <button className="chat-send-btn" onClick={fetchAiAnswer} disabled={chatLoading}>
+                  {chatLoading ? '...' : '→'}
+                </button>
+              </div>
+              {chatError && <p className="error-text">Ошибка: {chatError}</p>}
+            </div>
           </>
         ) : (
           <p>Теория отсутствует</p>
         )}
       </aside>
 
-      <div className={`level-page-wrapper ${sidebarOpen ? 'sidebar-open' : ''}`} style={{ display: 'flex', justifyContent: 'center' }}>
-        <div className="level-page-container" style={{ maxWidth: '650px', flexGrow: 1 }}>
+      <div className={`level-page-wrapper ${sidebarOpen ? 'sidebar-open' : ''}`}>
+        <div className="level-page-container">
           <div className="level-header">
             Уровень {level.levelNumber}: {level.name}
             <p>Сложность: {level.difficulty}</p>
@@ -271,6 +339,7 @@ const LevelPage = () => {
                         checked={selectedAnswerId === answer.id}
                         onChange={() => setSelectedAnswerId(answer.id)}
                         disabled={isBlocked}
+                        disabled={isBlocked}
                       />
                       <label htmlFor={`answer-${index}`}>{answer.text}</label>
                     </div>
@@ -281,8 +350,7 @@ const LevelPage = () => {
                   className="check-button"
                   onClick={handleCheck}
                   disabled={checking || isBlocked}
-                  title={isBlocked ? 'Достигнут лимит попыток. Обновите страницу для сброса.' : "Проверить выбранный ответ"}
-                  style={{ marginTop: '15px', alignSelf: 'center' }}
+                  title={isBlocked ? 'Достигнут лимит попыток. Обновите страницу.' : 'Проверить ответ'}
                 >
                   {checking ? 'Проверка...' : 'Проверить'}
                 </button>
@@ -301,8 +369,8 @@ const LevelPage = () => {
               )}
 
               {isBlocked && (
-                <p style={{ color: 'red', marginTop: '10px', fontWeight: 'bold' }}>
-                  Вы достигли максимального количества попыток для этого вопроса. Для повторной попытки обновите страницу.
+                <p className="error-text">
+                  Вы достигли максимального количества попыток. Обновите страницу для повторной попытки.
                 </p>
               )}
             </>
@@ -346,10 +414,12 @@ const LevelPage = () => {
             style={{ width: '100%', height: 'auto', userSelect: 'none' }}
             draggable={false}
           />
+          <div className="mascot-wrapper">
+            <img src={mascotSrc} alt="Mascot" draggable={false} />
+          </div>
         </div>
-      </div>
-    </>
-  );
+      </>
+      );
 };
 
-export default LevelPage;
+      export default LevelPage;
