@@ -1,0 +1,66 @@
+/* Контейнер */
+.main-container {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 2rem;
+  margin: 0 auto;
+  max-width: 1200px;
+}
+
+/* Хедер */
+.header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+/* Сетка карточек */
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 2rem;
+}
+
+/* Карточка модуля */
+.module-card {
+  padding: 1.5rem;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  color: #000;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s ease;
+  min-height: 180px;
+}
+
+.module-card:hover {
+  transform: scale(1.02);
+}
+
+/* Заголовок */
+.module-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+/* Уровни */
+.module-levels {
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Кнопка */
+.module-button {
+  align-self: flex-start;
+  background-color: transparent;
+  border: 2px solid #333;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.module-button:hover {
+  background-color: #fff;
+}
