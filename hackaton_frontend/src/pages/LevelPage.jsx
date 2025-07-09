@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './LevelPage.css';
+import { UserContext } from '../context/UserContext';
 
 const LevelPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  const { user, loading: loadingUser } = useContext(UserContext);
 
   const [level, setLevel] = useState(null);
   const [questionIds, setQuestionIds] = useState([]);
@@ -29,6 +32,7 @@ const LevelPage = () => {
   const jumpImg = require('../jump.png');
   const [mascotSrc, setMascotSrc] = useState(seatImg);
 
+  // Новый стейт для количества неправильных попыток и блокировки
   const [wrongAttempts, setWrongAttempts] = useState(0);
   const [isBlocked, setIsBlocked] = useState(false);
 
@@ -43,6 +47,7 @@ useEffect(() => {
   };
 }, []);
 
+  // Хуки вызываются всегда, на верхнем уровне:
   useEffect(() => {
     setLoading(true);
     fetch(`http://localhost:5246/Level/get-by/${id}`)
@@ -71,6 +76,8 @@ useEffect(() => {
       setCheckResult(null);
       setCheckError(null);
       setMascotSrc(seatImg);
+
+      // Сбрасываем счетчик неправильных попыток и блокировку при смене вопроса
       setWrongAttempts(0);
       setIsBlocked(false);
 
@@ -90,13 +97,11 @@ useEffect(() => {
     }
   }, [questionIds, currentIndex]);
 
-  const handleNext = () => {
-    if (currentIndex < questionIds.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-    } else {
-      alert('Вы завершили все вопросы!');
-    }
-  };
+  if (loadingUser) return <div className="level-page-wrapper">Загрузка данных пользователя...</div>;
+
+  if (loading) return <div className="level-page-wrapper">Загрузка уровня...</div>;
+  if (error) return <div className="level-page-wrapper">Ошибка: {error}</div>;
+  if (!level) return <div className="level-page-wrapper">Уровень не найден</div>;
 
   const fetchShortDescription = () => {
     if (!level?.theory?.text) return;
@@ -169,7 +174,7 @@ useEffect(() => {
     setCheckResult(null);
 
     const userAnswerRequest = {
-      UserId: 1,
+      UserId: user?.id || 1,
       QuestionId: currentQuestion.id,
       SelectedAnswers: [selectedAnswerId],
     };
@@ -194,6 +199,8 @@ useEffect(() => {
             if (newCount >= 2) setIsBlocked(true);
             return newCount;
           });
+          setMascotSrc(seatImg);
+          setIsBlocked(true);
         }
       })
       .catch(err => {
@@ -202,9 +209,93 @@ useEffect(() => {
       });
   };
 
-  if (loading) return <div className="level-page-wrapper">Загрузка уровня...</div>;
-  if (error) return <div className="level-page-wrapper">Ошибка: {error}</div>;
-  if (!level) return <div className="level-page-wrapper">Уровень не найден</div>;
+  const handlePrevious = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(prev => prev - 1);
+      setCheckResult(null);
+      setSelectedAnswerId(null);
+      setCheckError(null);
+      setMascotSrc(seatImg);
+      setIsBlocked(false);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentIndex < questionIds.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+      setCheckResult(null);
+      setSelectedAnswerId(null);
+      setCheckError(null);
+      setMascotSrc(seatImg);
+      setIsBlocked(false);
+    } else {
+      const rightAnswers = questionIds.filter((_, idx) => {
+        return idx < currentIndex || (checkResult && checkResult.isAllAnswersCorrect);
+      }).length;
+
+      const questionsCount = questionIds.length;
+      const token = localStorage.getItem('token');
+
+      fetch(`http://localhost:5246/Level/is-level-completed?rightAnswers=${rightAnswers}&questionsCount=${questionsCount}&lvlNumber=${level.levelNumber}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+        .then(res => {
+          if (!res.ok) {
+            return res.text().then(text => {
+              console.error('Ошибка ответа сервера:', text);
+              return false;
+            });
+          }
+          return res.text();
+        })
+        .then(text => {
+          let isCompleted = false;
+
+          if (!text) {
+            // Пустой ответ — считаем, что уровень уже был пройден, просто возвращаемся
+            navigate(-1);
+            return;
+          }
+
+          try {
+            isCompleted = JSON.parse(text);
+          } catch (e) {
+            console.warn('Не удалось распарсить ответ как JSON, считаем как не пройдено');
+          }
+
+          if (isCompleted) {
+            navigate(-1);
+            setTimeout(() => {
+              window.location.reload();
+            }, 100);
+          } else {
+            alert('Уровень пройден менее чем на 80%, повторите попытку');
+            navigate(-1);
+            setTimeout(() => {
+              window.location.reload();
+            }, 100);
+          }
+        })
+        .catch(err => {
+          console.error('Ошибка при проверке завершения уровня:', err);
+          navigate(-1);
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
+        });
+    }
+  };
+
+
+  const difficultyMap = {
+    1: { text: 'Легко', color: 'green' },
+    2: { text: 'Нормально', color: 'orange' },
+    3: { text: 'Сложно', color: 'red' }
+  };
 
   return (
     <>
@@ -272,7 +363,9 @@ useEffect(() => {
         <div className="level-page-container">
           <div className="level-header">
             Уровень {level.levelNumber}: {level.name}
-            <p>Сложность: {level.difficulty}</p>
+            <p style={{ color: difficultyMap[level.difficulty]?.color || 'black' }}>
+              Сложность: {difficultyMap[level.difficulty]?.text || 'Неизвестно'}
+            </p>
           </div>
 
           <button className="show-theory-btn" onClick={() => setSidebarOpen(true)}>
@@ -284,12 +377,19 @@ useEffect(() => {
           ) : currentQuestion ? (
             <>
               <div className="question-block">
+                <button
+                  className="arrow-back-button"
+                  onClick={() => navigate(-1)}
+                  title="Вернуться на предыдущую страницу"
+                >
+                  ←
+                </button>
                 <h3>Вопрос {currentIndex + 1}:</h3>
                 <p>{currentQuestion.title}</p>
               </div>
 
-              <div className="answers-block-wrapper">
-                <div className="answers-block">
+              <div className="answers-block-wrapper" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div className="answers-block" style={{ width: '100%' }}>
                   {currentQuestion.answers?.map((answer, index) => (
                     <div key={index}>
                       <input
@@ -318,8 +418,12 @@ useEffect(() => {
               {checkError && <p className="error-text">Ошибка: {checkError}</p>}
 
               {checkResult && (
-                <div className={`check-result ${checkResult.isAllAnswersCorrect ? 'correct' : 'incorrect'}`}>
-                  {checkResult.isAllAnswersCorrect ? 'Ответ правильный!' : 'Ответ неверный.'}
+                <div
+                  className={`check-result ${checkResult.isAllAnswersCorrect ? 'correct' : 'incorrect'}`}
+                >
+                  {checkResult.isAllAnswersCorrect
+                    ? 'Ответ правильный! 🎉'
+                    : 'Ответ неверный. Попробуйте ещё раз.'}
                 </div>
               )}
 
@@ -333,18 +437,42 @@ useEffect(() => {
             <p>Вопрос не найден</p>
           )}
 
-          <div className="buttons-wrapper">
-            <button className="back-button" onClick={() => navigate(-1)}>
+          <div className="buttons-wrapper" style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+            <button
+              className="back-button"
+              onClick={handlePrevious}
+              disabled={currentIndex === 0}
+              title="Предыдущий вопрос"
+            >
               Назад
             </button>
-            <button className="back-button" onClick={handleNext}>
+
+            <button
+              className="back-button"
+              onClick={handleNext}
+              title="Следующий вопрос"
+            >
               Далее
             </button>
           </div>
         </div>
 
-        <div className="mascot-wrapper">
-          <img src={mascotSrc} alt="Mascot" draggable={false} />
+        <div
+          style={{
+            width: '10%',
+            minWidth: '80px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginLeft: '20px',
+          }}
+        >
+          <img
+            src={mascotSrc}
+            alt="Mascot"
+            style={{ width: '100%', height: 'auto', userSelect: 'none' }}
+            draggable={false}
+          />
         </div>
       </div>
     </>
@@ -352,3 +480,4 @@ useEffect(() => {
 };
 
 export default LevelPage;
+
