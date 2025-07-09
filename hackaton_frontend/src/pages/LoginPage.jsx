@@ -1,5 +1,7 @@
 import { useState } from "react";
 import "./AuthPages.css";
+import { BrowserRouter as Router, Routes, Route, NavLink } from "react-router-dom";
+import RegisterPage from "./RegisterPage";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -43,6 +45,15 @@ export default function LoginPage() {
         />
         <button type="submit">Войти</button>
       </form>
+      <div class="nav-buttons">
+          <a href="/register">Зарегистрироваться</a>    
+      </div>
+      <img
+        src="/panda_1.png"
+        alt="Красная панда"
+        className="panda-mascot"
+      />
     </div>
+    
   );
 }

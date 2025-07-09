@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'; // ✅ импорт хуков
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // ✅ импорт для редиректа
 import './MainPage.css';
 
 const COLORS = [
@@ -11,14 +12,34 @@ function getShuffledColors(count) {
   return shuffled.slice(0, count);
 }
 
+
 const MainPage = () => {
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [colors, setColors] = useState([]);
 
+  const navigate = useNavigate(); // ✅ хук для навигации
+
   useEffect(() => {
-    fetch('http://localhost:5246/Module/get-all')
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+  
+    fetch('http://localhost:5246/Module/get-all', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
       .then((response) => {
+        if (response.status === 401) {
+          // если токен невалидный
+          localStorage.removeItem("token");
+          navigate("/login");
+          throw new Error("Неавторизован");
+        }
         if (!response.ok) throw new Error('Ошибка при получении данных');
         return response.json();
       })
@@ -31,7 +52,9 @@ const MainPage = () => {
         console.error('Ошибка:', error);
         setLoading(false);
       });
-  }, []);
+  }, [navigate]);
+
+  
 
   if (loading) {
     return <div className="loading">Загрузка...</div>;
@@ -59,5 +82,4 @@ const MainPage = () => {
   );
 };
 
-// ✅ экспорт по умолчанию
 export default MainPage;
