@@ -1,0 +1,248 @@
+/* Обертка всей страницы */
+.level-page-wrapper {
+  width: 100%; /* заменили 100vw на 100% */
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  background-color: #fff;
+  padding: 40px 0 60px;
+  box-sizing: border-box;
+  transition: padding-left 0.3s ease;
+  overflow-x: hidden; /* прячем горизонтальный скролл */
+}
+
+/* Когда сайдбар открыт — добавляем отступ слева */
+.level-page-wrapper.sidebar-open {
+  padding-left: 320px; /* фиксированная ширина сайдбара */
+}
+
+/* Контейнер с вопросами и ответами */
+.level-page-container {
+  width: 100%; /* заменили 100vw на 100% */
+  max-width: 650px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #3a3a3a;
+  border-radius: 10px;
+  box-sizing: border-box;
+  transition: max-width 0.3s ease;
+}
+
+/* При открытом сайдбаре уменьшаем max-width контейнера */
+.level-page-wrapper.sidebar-open .level-page-container {
+  max-width: calc(650px - 320px);
+}
+
+/* Заголовок уровня */
+.level-header {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #7c1521;
+  margin-bottom: 10px;
+}
+
+.level-header p {
+  font-weight: 500;
+  font-size: 14px;
+  margin-top: 8px;
+  color: #7c1521;
+}
+
+/* Кнопка показа теории */
+.show-theory-btn {
+  background-color: #7c1521;
+  color: #e8dfda;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 30px;
+  transition: background-color 0.3s ease;
+  user-select: none;
+  max-width: 200px;
+  width: 100%;
+}
+
+.show-theory-btn:hover {
+  background-color: #5a0f18;
+}
+
+/* Вопрос и ответы вместе занимают одинаковую ширину */
+/* Блок с вопросом */
+.question-block {
+  width: 100%;
+  background-color: #7c1521;
+  color: #e8dfda;
+  padding: 15px 20px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+/* Блок с ответами */
+.answers-block {
+  width: 100%;
+  background-color: #e8dfda; /* CMYK 10 12 14 0 / RGB 232 223 218 */
+  padding: 20px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  box-sizing: border-box;
+}
+
+/* Ответы и интерактивность */
+.answers-block div {
+  margin-bottom: 14px;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 8px 12px;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  user-select: none;
+  display: flex;
+  align-items: center;
+}
+
+.answers-block div:last-child {
+  margin-bottom: 0;
+}
+
+/* Радио кнопка скрываем */
+.answers-block input[type="radio"] {
+  display: none;
+}
+
+/* Стиль для label */
+.answers-block label {
+  flex-grow: 1;
+  cursor: pointer;
+  font-weight: 500;
+  color: #3a3a3a;
+  padding-left: 12px;
+}
+
+/* Ховер эффект */
+.answers-block div:hover {
+  background-color: #d5c9c4;
+  box-shadow: 0 0 6px rgba(124, 21, 33, 0.5);
+}
+
+/* Активный (выбранный) ответ */
+.answers-block input[type="radio"]:checked + label {
+  background-color: #7c1521;
+  color: #e8dfda;
+  border-radius: 6px;
+  padding-left: 12px;
+  font-weight: 700;
+}
+
+/* Кнопки Далее и Назад */
+.buttons-wrapper {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 30px;
+}
+
+.back-button-wrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  margin: 0 8px;
+}
+
+.back-button {
+  padding: 14px 28px;
+  font-size: 16px;
+  background-color: #ca133e;
+  border-radius: 8px;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 100%;
+  max-width: 300px;
+  border: 2px solid #63071E;
+  user-select: none;
+}
+
+.back-button:hover {
+  background-color: #a81830;
+}
+
+/* Сайдбар */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: -320px; /* прячем за левый край фиксировано */
+  width: 320px;
+  height: 100vh;
+  background-color: #f7f5f2;
+  box-shadow: 3px 0 10px rgba(0,0,0,0.15);
+  padding: 30px 25px;
+  box-sizing: border-box;
+  transition: left 0.3s ease;
+  z-index: 1000;
+  overflow-y: auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Сайдбар открыт */
+.sidebar.open {
+  left: 0;
+}
+
+/* Кнопка закрытия */
+.sidebar-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-size: 28px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #7c1521;
+  font-weight: 900;
+  line-height: 1;
+  user-select: none;
+}
+
+/* Заголовок теории */
+.sidebar-title {
+  color: #7c1521;
+  margin-bottom: 18px;
+  font-weight: 700;
+  font-size: 24px;
+}
+
+/* Текст теории */
+.sidebar-text {
+  color: #3a3a3a;
+  line-height: 1.5;
+  font-size: 16px;
+}
+
+/* Затемнение фона при открытом сайдбаре */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0,0,0,0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 999;
+}
+
+.sidebar-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
