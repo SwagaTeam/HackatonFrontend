@@ -1,38 +1,74 @@
-.App {
+
+
+.auth-container {
+  background-color: #F8EBDA; /* полупрозрачный, мягкий */
+  border: 2px solid #800020;
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 400px;
+  margin: 80px auto;
+  box-shadow: 0 12px 30px rgba(128, 0, 32, 0.2);
   text-align: center;
+  position: relative;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.auth-container h2 {
+  color: #800020;
+  margin-bottom: 20px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.auth-form input {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid #800020;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+.auth-form input:focus {
+  border-color: #ff4d4d;
+  box-shadow: 0 0 8px rgba(255, 77, 77, 0.4);
+}
+
+.auth-form button {
+  background-color: #800020;
   color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  margin-top: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s, transform 0.2s;
 }
 
-.App-link {
-  color: #61dafb;
+.auth-form button:hover {
+  background-color: #a00028;
+  transform: translateY(-2px);
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.auth-footer {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #800020;
+  opacity: 0.8;
+}
+
+.panda-mascot {
+  position: fixed;       /* фиксируем относительно окна браузера */
+  left: 20px;            /* отступ слева */
+  bottom: 20px;          /* отступ снизу */
+  width: 350px;          /* ширина (подбери по вкусу, не слишком маленькая) */
+  height: auto;          /* сохраняет пропорции */
+  opacity: 0.85;         /* слегка прозрачная, чтобы не мешала */
+  user-select: none;     /* чтобы нельзя было выделить */
+  pointer-events: none;  /* чтобы клики проходили сквозь картинку */
+  z-index: 1000;         /* поверх всего */
+  /*transition: transform 0.3s ease;*/  
+}
+
+.panda-mascot:hover {
+  transform: scale(1.05); /* небольшой эффект при наведении */
 }
