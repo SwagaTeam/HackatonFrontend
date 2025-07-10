@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import QuestionModal from './QuestionModal';
+import { UserContext } from '../context/UserContext';
 import './MainPage.css';
 
 const COLORS = [
@@ -21,9 +23,12 @@ const MainPage = () => {
   const [loading, setLoading] = useState(true);
   const [colors, setColors] = useState([]);
   const [columns, setColumns] = useState(3);
-  const navigate = useNavigate();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [questionError, setQuestionError] = useState(null);
 
-  // ✅ Получаем модули с сервера
+  const navigate = useNavigate();
+  const { user } = useContext(UserContext);
+
   useEffect(() => {
     fetch('http://localhost:5246/Module/get-all')
       .then((response) => {
@@ -41,7 +46,6 @@ const MainPage = () => {
       });
   }, []);
 
-  // ✅ Обработчик изменения размера окна
   useEffect(() => {
     function updateColumns() {
       const width = window.innerWidth;
@@ -70,11 +74,21 @@ const MainPage = () => {
       return;
     }
 
-    // ✅ Здесь можешь сделать переход на страницу модуля
     navigate(`/module/${moduleId}`);
+  };
 
-    // Если пока нет маршрута, можно оставить alert
-    // alert(`Открываем модуль с id: ${moduleId}`);
+  const openQuestionModal = () => {
+    if (!user || user.currentLevelNumber == null) {
+      setQuestionError('Не удалось определить текущий уровень пользователя');
+      return;
+    }
+
+    setModalOpen(true);
+    setQuestionError(null);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
   };
 
   if (loading) {
@@ -86,8 +100,8 @@ const MainPage = () => {
       <header className="header">
         <h1>Список модулей</h1>
       </header>
-      <div 
-        className="module-grid" 
+      <div
+        className="module-grid"
         style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
       >
         {modules.map((module, index) => (
@@ -107,6 +121,29 @@ const MainPage = () => {
           </div>
         ))}
       </div>
+
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+        <button
+          className="module-button modal-open-button"
+          onClick={openQuestionModal}
+          disabled={modules.length === 0}
+        >
+          Пройти квиз по вопросам
+        </button>
+      </div>
+
+      {questionError && (
+        <div style={{ color: 'red', textAlign: 'center', marginTop: 16 }}>
+          {questionError}
+        </div>
+      )}
+
+      {modalOpen && user?.currentLevelNumber && (
+        <QuestionModal
+          levelId={user.currentLevelNumber}
+          onClose={closeModal}
+        />
+      )}
     </div>
   );
 };

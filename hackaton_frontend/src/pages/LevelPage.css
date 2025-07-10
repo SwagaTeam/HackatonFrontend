@@ -15,7 +15,6 @@
 .level-page-container {
   width: 100%;
   max-width: 650px;
-  max-height: 80vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -36,10 +35,6 @@ body.level-page-body {
 body.level-page-body {
   background-attachment: initial !important;
 }
-
-
-
-
 
 /* Заголовок уровня */
 .level-header {
@@ -596,4 +591,47 @@ body.level-page-body {
 .arrow-back-button:focus {
   outline: 3px solid #7c1521;
   outline-offset: 2px;
+}
+
+.answer-item.selected {
+  background-color: #eef6ff;
+}
+
+.result-message.correct {
+  color: green;
+}
+
+.result-message.incorrect {
+  color: red;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+
+.progress-bar-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 650px;
+  margin: 0 auto 20px;
+  height: 24px;
+  background-color: #ddd;  /* серый фон */
+  border-radius: 10px;
+  overflow: hidden; /* обрезаем зелёную заливку по краям */
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0;  /* ширина изменяется динамически */
+  background-color: #4caf50; /* зелёный цвет */
+  border-radius: 10px 0 0 10px; /* скругляем левый край */
+  transition: width 0.3s ease;
 }

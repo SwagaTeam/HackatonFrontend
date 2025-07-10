@@ -16,6 +16,8 @@ const LevelPage = () => {
   const [loading, setLoading] = useState(true);
   const [questionLoading, setQuestionLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isCorrectAnswered, setIsCorrectAnswered] = useState(false);
+
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -30,6 +32,8 @@ const LevelPage = () => {
 
   const seatImg = require('../seat.png');
   const jumpImg = require('../jump.png');
+  const cryImg = require('../cry.png');  // <-- добавляем сюда
+
   const [mascotSrc, setMascotSrc] = useState(seatImg);
 
   // Новый стейт для количества неправильных попыток и блокировки
@@ -40,6 +44,36 @@ const LevelPage = () => {
   const [chatResponse, setChatResponse] = useState(null);
   const [chatLoading, setChatLoading] = useState(false);
   const [chatError, setChatError] = useState(null);
+
+  // В начало компонента LevelPage (после всех useState):
+// Подсчет количества правильных ответов на основе checkResult для каждого вопроса
+// Нам нужно хранить состояние для результатов по всем вопросам
+
+const [correctAnswersMap, setCorrectAnswersMap] = useState({}); // { questionId: true/false }
+
+useEffect(() => {
+  // Когда приходит новый checkResult, обновляем correctAnswersMap
+  if (currentQuestion && checkResult) {
+    setCorrectAnswersMap(prev => ({
+      ...prev,
+      [currentQuestion.id]: checkResult.isAllAnswersCorrect,
+    }));
+  }
+}, [checkResult, currentQuestion]);
+
+// Теперь посчитаем количество правильных ответов
+const correctCount = Object.values(correctAnswersMap).filter(Boolean).length;
+const totalQuestions = questionIds.length;
+const progressPercent = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
+
+useEffect(() => {
+  // при загрузке уровня сбрасываем состояние блокировки — новая сессия уровня
+  sessionStorage.clear(); // или очищать только ключи, связанные с блокировкой
+
+  setIsBlocked(false);
+  setWrongAttempts(0);
+}, [id]);
+  
 useEffect(() => {
   document.body.classList.add('level-page-body');
   return () => {
@@ -82,10 +116,10 @@ useEffect(() => {
       setCheckResult(null);
       setCheckError(null);
       setMascotSrc(seatImg);
+      setIsCorrectAnswered(false); // ← добавьте это при загрузке нового вопроса
+
 
       // Сбрасываем счетчик неправильных попыток и блокировку при смене вопроса
-      setWrongAttempts(0);
-      setIsBlocked(false);
 
       fetch(`http://localhost:5246/Question/get-by/${questionId}`)
         .then(res => {
@@ -93,9 +127,15 @@ useEffect(() => {
           return res.json();
         })
         .then(data => {
-          setCurrentQuestion(data);
-          setQuestionLoading(false);
-        })
+  setCurrentQuestion(data);
+  setQuestionLoading(false);
+
+  const isBlockedStored = sessionStorage.getItem(`blocked_${questionId}`) === 'true';
+setIsBlocked(isBlockedStored);
+
+const wrongAttemptsStored = Number(sessionStorage.getItem(`wrongAttempts_${questionId}`)) || 0;
+setWrongAttempts(wrongAttemptsStored);
+})
         .catch(err => {
           setError(err.message);
           setQuestionLoading(false);
@@ -195,20 +235,28 @@ useEffect(() => {
         return res.json();
       })
       .then(data => {
-        setCheckResult(data);
-        setChecking(false);
-        if (data.isAllAnswersCorrect) {
-          setMascotSrc(jumpImg);
-        } else {
-          setWrongAttempts(prev => {
-            const newCount = prev + 1;
-            if (newCount >= 2) setIsBlocked(true);
-            return newCount;
-          });
-          setMascotSrc(seatImg);
-          setIsBlocked(true);
-        }
-      })
+  setCheckResult(data);
+  setChecking(false);
+  if (data.isAllAnswersCorrect) {
+    setMascotSrc(jumpImg);
+    setIsCorrectAnswered(true);
+  } else {
+    setWrongAttempts(prev => {
+  const newCount = prev + 1;
+  const questionId = currentQuestion.id;
+
+  sessionStorage.setItem(`wrongAttempts_${questionId}`, newCount.toString());
+
+  if (newCount >= 2) {
+    setIsBlocked(true);
+    sessionStorage.setItem(`blocked_${questionId}`, 'true');
+  }
+  return newCount;
+});
+    setMascotSrc(cryImg);
+  }
+})
+
       .catch(err => {
         setCheckError(err.message);
         setChecking(false);
@@ -382,6 +430,13 @@ useEffect(() => {
             <p>Загрузка вопроса...</p>
           ) : currentQuestion ? (
             <>
+            <div className="progress-bar-wrapper">
+  <div className="progress-bar" style={{ width: `${progressPercent}%` }}></div>
+  <span className="progress-text">
+    Прогресс: {correctCount} из {totalQuestions}
+  </span>
+</div>
+
               <div className="question-block">
                 <button
                   className="arrow-back-button"
@@ -399,26 +454,32 @@ useEffect(() => {
                   {currentQuestion.answers?.map((answer, index) => (
                     <div key={index}>
                       <input
-                        type="radio"
-                        id={`answer-${index}`}
-                        name="answer"
-                        checked={selectedAnswerId === answer.id}
-                        onChange={() => setSelectedAnswerId(answer.id)}
-                        disabled={isBlocked}
-                      />
+  type="radio"
+  id={`answer-${index}`}
+  name="answer"
+  checked={selectedAnswerId === answer.id}
+  onChange={() => setSelectedAnswerId(answer.id)}
+  disabled={isBlocked || isCorrectAnswered}
+/>
                       <label htmlFor={`answer-${index}`}>{answer.text}</label>
                     </div>
                   ))}
                 </div>
 
                 <button
-                  className="check-button"
-                  onClick={handleCheck}
-                  disabled={checking || isBlocked}
-                  title={isBlocked ? 'Достигнут лимит попыток. Обновите страницу.' : 'Проверить ответ'}
-                >
-                  {checking ? 'Проверка...' : 'Проверить'}
-                </button>
+  className="check-button"
+  onClick={handleCheck}
+  disabled={checking || isBlocked || isCorrectAnswered}
+  title={
+    isBlocked
+      ? 'Достигнут лимит попыток. Обновите страницу.'
+      : isCorrectAnswered
+      ? 'Вы уже ответили правильно'
+      : 'Проверить ответ'
+  }
+>
+  {checking ? 'Проверка...' : 'Проверить'}
+</button>
               </div>
 
               {checkError && <p className="error-text">Ошибка: {checkError}</p>}
