@@ -64,36 +64,32 @@ const ModulePage = () => {
         const maxBottom = window.innerHeight - circleSize - 20; // отступ снизу 20px
 
         const calculatedCoords = data.levels.map((level, index) => {
-
-          // Ограничиваем offsetX чтобы не выходить за maxRight и не выходить за левый край (min 20)
           const offsetXRaw = (pseudoRandom(numericId * 5000 + index * 91) * 2 - 1) * MAX_HORIZONTAL_OFFSET;
           let offsetX = BASE_LEFT + offsetXRaw;
 
+          // Учитываем ширину круга и границы контейнера
+          const minLeft = 20;
+          const maxLeft = window.innerWidth - circleSize - 40; // отступ справа + отступ слева
+
+          offsetX = Math.max(Math.min(offsetX, maxLeft), minLeft);
 
           let posY;
           if (!prevCoord) {
-            // Для первого уровня просто рандом по высоте в пределах от 20 до MIN_VERTICAL_GAP*2
             posY = 20 + pseudoRandom(numericId * 1000 + index * 37) * MIN_VERTICAL_GAP * 2;
           } else {
-            // Базовый posY - минимум, чтобы уровень был ниже предыдущего на MIN_VERTICAL_GAP
             const baseY = prevCoord.top + MIN_VERTICAL_GAP;
-
-            // Добавляем случайный дополнительный сдвиг вниз (0...MAX_VERTICAL_JITTER)
             const jitter = pseudoRandom(numericId * 2000 + index * 57) * MAX_VERTICAL_JITTER;
-
             posY = baseY + jitter;
-
-            // Гарантируем, что posY не меньше предыдущего (вдруг jitter отрицательный, хотя тут не будет)
             if (posY < prevCoord.top) posY = prevCoord.top + MIN_VERTICAL_GAP;
           }
 
-          // Ограничиваем posY чтобы не выходить за maxBottom и не быть меньше 20
           posY = Math.min(Math.max(posY, 20), maxBottom);
 
           const coord = { top: posY, left: offsetX };
           prevCoord = coord;
           return coord;
         });
+
 
 
         setCoordsList(calculatedCoords);
@@ -107,14 +103,14 @@ const ModulePage = () => {
 
 
   useEffect(() => {
-  // Добавляем класс при монтировании
-  document.body.classList.add('module-page-body');
+    // Добавляем класс при монтировании
+    document.body.classList.add('module-page-body');
 
-  // Убираем класс при размонтировании
-  return () => {
-    document.body.classList.remove('module-page-body');
-  };
-}, []);
+    // Убираем класс при размонтировании
+    return () => {
+      document.body.classList.remove('module-page-body');
+    };
+  }, []);
 
 
   if (loadingUser) return <div>Загрузка данных пользователя...</div>;
