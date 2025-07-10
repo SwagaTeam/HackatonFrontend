@@ -40,6 +40,18 @@ const LevelPage = () => {
   const [chatResponse, setChatResponse] = useState(null);
   const [chatLoading, setChatLoading] = useState(false);
   const [chatError, setChatError] = useState(null);
+useEffect(() => {
+  document.body.classList.add('level-page-body');
+  return () => {
+    document.body.classList.remove('level-page-body');
+  };
+}, []);
+useEffect(() => {
+  document.body.classList.add('level-page-body');
+  return () => {
+    document.body.classList.remove('level-page-body');
+  };
+}, []);
 
   // Хуки вызываются всегда, на верхнем уровне:
   useEffect(() => {
@@ -416,7 +428,7 @@ const LevelPage = () => {
                   className={`check-result ${checkResult.isAllAnswersCorrect ? 'correct' : 'incorrect'}`}
                 >
                   {checkResult.isAllAnswersCorrect
-                    ? 'Ответ правильный! 🎉'
+                    ? 'Ответ правильный!'
                     : 'Ответ неверный. Попробуйте ещё раз.'}
                 </div>
               )}
