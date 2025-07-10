@@ -19,19 +19,6 @@
   margin-bottom: 8px;
 }
 
-.module-title{
-  color:#7C1521;
-}
-.module-text{
-  color: black;
-
-}
-
-.module-page {
-  display: flex !important;
-}
-
-
 .module-description {
   font-size: 16px;
   color: #333;
@@ -70,11 +57,9 @@
   /* height: 80vh; */
   display: flex;
   justify-content: center;
-<<<<<<< HEAD
   align-items: center;
   overflow-x: auto;
   min-width: 0;
-=======
   align-items: flex-start;
   /* Прижать уровни к верху */
 }
@@ -84,7 +69,6 @@
   /* высота задаётся динамически из React */
   /* добавим чтобы занимал ширину контейнера */
   width: 100%;
->>>>>>> d8565e6451ef6b173cc372118558c286c8ab3c4a
 }
 
 .levels-background-wrapper {
